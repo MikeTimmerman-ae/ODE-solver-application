@@ -12,12 +12,9 @@ Example ODE tool.
 ## Import libraries
 from src.ODE_solver import ODE, Trajectory
 from dash import Dash, html, dcc, Input, Output, State, ctx, callback_context, ALL
-import plotly.express as px
-import pandas as pd
 import numpy as np
 
 app = Dash(__name__)
-
 
 app.layout = html.Div(children=[
     html.Div(children=[
@@ -41,10 +38,17 @@ app.layout = html.Div(children=[
 
             html.Div(children=[
                 html.H2('Choose ODE'),
-                dcc.Markdown(f'''
-                A. $$y'(x, y) = (y + 1) cos(y x)$$
-                ''', mathjax=True),
-                dcc.Dropdown(['A', 'B', 'C', 'D'], 'A', id='choose-ode'),
+                dcc.Markdown('''
+                A. $$y'(x, y) = (y + 1) cos(y x)$$\n
+                B. $$y'(x, y) = -0.1y$$\n
+                C. $$y'(x, y) = -2y$$\n
+                D. $$y'(x, y) = cos(x)$$\n
+                E. $$y'(x, y) = -2y$$
+                ''', mathjax=True, style={'color': '#d3d3d3',
+                                          'font-family': 'Arial, Helvetica, sans-serif',
+                                          'margin': '5px',
+                                          'font-size': '13px'}),
+                dcc.Dropdown(['A', 'B', 'C', 'D', 'E'], '', id='choose-ode'),
             ], className='secondary-container'),
 
             html.Div(children=[
@@ -96,7 +100,7 @@ app.layout = html.Div(children=[
                 id='sliderinput',
                 min=0,
                 max=10,
-                step=1,
+                step=0.1,
                 marks={i: f' {i}' if i%2==0 else str("") for i in range(0, 11)},
                 value=5,
             ),
@@ -113,19 +117,47 @@ app.layout = html.Div(children=[
 ])
 
 
+# # Switch ode
+@app.callback(Output("trajectory-container", "children", allow_duplicate=True),
+              Input('choose-ode', 'value'),
+              prevent_initial_call='initial_duplicate')
+def choose_ode(ode_choice):
+    if ctx.triggered_id == 'choose-ode' and ode_choice != "":
+        if ode_choice == 'A':
+            f = lambda t, x: (x + 1) * np.cos(x * t)
+            ode.f = f
+        elif ode_choice == 'B':
+            f = lambda t, x: -0.1 * x
+            ode.f = f
+        elif ode_choice == 'C':
+            f = lambda t, x: -2 * x
+            ode.f = f
+        elif ode_choice == 'D':
+            f = lambda t, x: np.cos(t)
+            ode.f = f
+        ode.trajectories = []
+        ode.n = 0
+    div = ode.create_div()
+    return div
+
+
 # Print submit messages
 @app.callback(Output('container-button', 'children'),
               Input('add-trajectory', 'n_clicks'),
               State('solving-method', 'value'))
 def add_trajectory(btn, method):
     if "add-trajectory" == ctx.triggered_id:
-        if method != None:
-            if ode.n < 5:
-                return html.Label('Trajectory added!')
+        if ode.f != None:
+            if method != None:
+                if ode.n < 6:
+                    return html.Label('Trajectory added!')
+                else:
+                    return html.Label('Max number of trajectories reached!')
             else:
-                return html.Label('Max number of trajectories reached!')
+                return html.Label('Choose a solving method!')
         else:
-            return html.Label('Choose method!')
+            return html.Label('First choose an ODE to solve!')
+
     else:
         return None
 
@@ -140,10 +172,11 @@ def add_trajectory(btn, method):
               prevent_initial_call='initial_duplicate')
 def add_trajectory(btn, h, x0, method, tf):
     if "add-trajectory" == ctx.triggered_id:
-        if method != None:
-            if ode.n < 5:
-                trajectory = Trajectory(ode.n, h, x0, method)
-                ode.add_trajectory(trajectory, tf)
+        if ode.f != None:
+            if method != None:
+                if ode.n < 6:
+                    trajectory = Trajectory(ode.n, h, x0, method)
+                    ode.add_trajectory(trajectory, tf)
     div = ode.create_div()
     return div
 
@@ -166,12 +199,14 @@ def delete_trajectory(*args):
 # Update trajectory traces in figure
 @app.callback(Output('example-graph', 'figure', allow_duplicate=True),
               Input('sliderinput', 'value'),
+              Input('choose-ode', 'value'),
               Input({"index": ALL, "type": "delete"}, 'n_clicks'),
               Input('add-trajectory', 'n_clicks'),
               prevent_initial_call='initial_duplicate')
 def update_figure(*args):
     trigger = callback_context.triggered[0]
-    if ctx.triggered_id == "add-trajectory" or ctx.triggered_id == "sliderinput" or trigger['value'] == 1:
+    if (ctx.triggered_id == "add-trajectory" or ctx.triggered_id == "sliderinput" or trigger['value'] == 1 or \
+            ctx.triggered_id == 'choose-ode') and args[1] != "":
         ode.update_trajectories(args[0])        # args[0] = final time
         ode.update_traces()
         ode.error_space()
@@ -180,9 +215,8 @@ def update_figure(*args):
 
 
 if __name__ == '__main__':
-    f = lambda t, x: (x + 1) * np.cos(x * t)
 
-    ode = ODE(f)
+    ode = ODE()
 
     app.config.suppress_callback_exceptions = True
     app.run_server(debug=True)

@@ -7,14 +7,11 @@ from dash import Dash, html
 
 
 class ODE:
-    def __init__(self, f):
-        self.f = f
+    def __init__(self):
+        self.f = None
         self.n = 0
-        self.fig = make_subplots(1, 3,
-                                 subplot_titles=('ODE solution space', 'Error plot', 'Region of Convergence')
-                                 )
+        self.fig = make_subplots(1, 3, subplot_titles=('ODE solution space', 'Error plot', 'Region of Convergence'))
         self.trajectories = []
-        self.solution_space()
 
     def frwd_euler(self, t, h, xi, f):
         xip = xi + h*f(t, xi)
@@ -220,8 +217,3 @@ class Trajectory:
 
         self.t = []
         self.x = []
-
-    def update_plot(self, fig):
-        fig.update_traces(selector=dict(name='Custom'+str(self.id+1)),
-                          x=self.t,
-                          y=self.x)
