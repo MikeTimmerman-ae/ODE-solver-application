@@ -1,4 +1,4 @@
-# AE2220-I_ODE_WebExamples
+# AE2220-I: Applied Numerical Analysis - ODE WebApp
 
 #### Dependencies
 Install the required dependencies using
