@@ -20,24 +20,35 @@ app = Dash(__name__)
 
 
 app.layout = html.Div(children=[
-    html.H1(children='ODE solver', style={'font-family': 'Tahoma'}),
+    html.Div(children=[
+        html.H1(children='ODE solver'),
+        html.P('This is an ordinary differential equation WebApp showing some basic characteristics of'
+               ' ODEs, specifically numerically solving these ordinary differential equations.'
+               ' In the \'Choose ODE\' box, a specific ODE can be chosen for further analysis.'
+               ' In the \'Add new trajectory\' the parameters for solving the ODE can be set.'
+               ' The \'Overview of trajectories\' shows all trajectories which have been added.'
+               ' The slider allows you to select to final time till which the ODE is solved.'
+               ' At the bottom of the page, the left graph shows the solution space with some'
+               ' standard trajectories given as reference as well as the references added by the user.'
+               ' The middle graph gives the order of the error vs. the time step while the most right'
+               ' plot displays the region of convergence for the different solving methods.'
+               ' Note: for the plots to update, change the value of the slider.'),
+    ], className='header-container'),
 
     html.Div(children=[
 
         html.Div(children=[
 
             html.Div(children=[
-                html.H2('Choose ODE', style={'font-family': 'Tahoma'}),
+                html.H2('Choose ODE'),
                 dcc.Markdown(f'''
                 A. $$y'(x, y) = (y + 1) cos(y x)$$
                 ''', mathjax=True),
-                html.Br(),
                 dcc.Dropdown(['A', 'B', 'C', 'D'], 'A', id='choose-ode'),
-                html.Br()
-            ]),
+            ], className='secondary-container'),
 
             html.Div(children=[
-                html.H2('Add new trajectory', style={'font-family': 'Tahoma'}),
+                html.H2('Add new trajectory'),
                 html.Label('Timestep:'),
                 html.Br(),
                 dcc.Input(id='timestep',
@@ -46,8 +57,7 @@ app.layout = html.Div(children=[
                           value=0.01,
                           type='number',
                           placeholder='h',
-                          step=0.001,
-                          style={'margin': '5px 5px 15px 10px'},
+                          step=0.001
                           ),
                 html.Br(),
                 html.Label('Initial Condition:'),
@@ -58,35 +68,29 @@ app.layout = html.Div(children=[
                           placeholder='initial condition',
                           min=-10,
                           max=10,
-                          step=0.1,
-                          style={'margin': '5px 5px 15px 10px'}
+                          step=0.1
                           ),
                 html.Br(),
                 html.Label('ODE solving method:'),
                 html.Br(),
                 dcc.Dropdown(['Forward Euler', 'Backward Euler', 'Runge Kutta 2', 'Runge Kutta 4'],
                              'Forward Euler',
-                             id='solving-method',
-                             style={'margin': '5px 5px 10px 0px'},
+                             id='solving-method'
                              ),
                 html.Br(),
                 html.Button('Add', id='add-trajectory', n_clicks=0),
                 html.Div(id='container-button', style={'margin': '5px 0px 0px 0px'})
-            ]),
+            ], className='secondary-container', id='container-add-trajectory'),
 
-        ], style={'padding': 10, 'flex': '1 1 30%'}),
+        ], style={'flex': '2 1 30%'}),
 
         html.Div(children=[
-            html.H2('Overview of trajectories', style={'font-family': 'Tahoma'}),
+            html.H2('Overview of trajectories'),
 
             html.Div(children=[
 
             ], id='trajectory-container'),
 
-            html.Br(),
-            html.Div(id='container-delete'),
-
-            html.Br(),
             html.Label('Final time:'),
             dcc.Slider(
                 id='sliderinput',
@@ -96,14 +100,16 @@ app.layout = html.Div(children=[
                 marks={i: f' {i}' if i%2==0 else str("") for i in range(0, 11)},
                 value=5,
             ),
-        ], style={'padding': 10, 'flex': '2 1 70%'}),
+        ], className='secondary-container', style={'flex': '2 1 70%'}),
 
     ], style={'display': 'flex', 'flex-direction': 'row'}),
 
-    dcc.Graph(
-        mathjax=True,
-        id='example-graph',
-    )
+    html.Div(children=[
+        dcc.Graph(
+            mathjax=True,
+            id='example-graph',
+        )
+        ], className='graph-container'),
 ])
 
 

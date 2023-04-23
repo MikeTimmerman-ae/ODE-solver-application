@@ -73,8 +73,11 @@ class ODE:
             div.append(html.Div(children=[
 
                 html.Div(children=[
-                    html.Label('Trajectory ' + str(i+1))
-                ], style={'padding': '5px 5px 0px'}),
+                    html.Label('Trajectory ' + str(i+1), style={'padding': '10px 0px 0px 5px',
+                                                                'margin': '0px'})
+                ], style={'padding': '15px 0px 0px 10px',
+                          'position': 'relative',
+                          'height': '1em'}),
 
                 html.Div(children=[
                     html.Div(children=[
@@ -89,20 +92,24 @@ class ODE:
                         html.Label('Initial Condition: ' + str(self.trajectories[i].x0))
                     ], style={'flex': '3 1 25%', 'padding': '5px'}),
 
-                    html.Div(children=[
-                        html.Button('Select', id={"index": i, "type": "selected"}, n_clicks=0),
-                    ], style={'flex': '4 1 10%', 'padding': '5px'}),
+                    # html.Div(children=[
+                    #     html.Button('Select', id={"index": i, "type": "selected"}, n_clicks=0),
+                    # ], style={'flex': '4 1 10%', 'padding': '5px'}),
 
                     html.Div(children=[
                         html.Button('Delete', id={"index": i, "type": "delete"}, n_clicks=0),
-                    ], style={'flex': '5 1 10%', 'padding': '5px'})
-                ], style={'display': 'flex', 'flex-direction': 'row', 'padding': '5px'})
+                    ], style={'flex': '5 1 20%', 'padding': '5px'})
+                ], style={'display': 'flex',
+                          'flex-direction': 'row',
+                          'padding': '5px',
+                          'height': '2.5em',
+                          'position': 'relative'})
 
             ], style={'border-style': 'solid solid solid solid',
                       'margin': '10px',
                       'padding': '0px',
                       'border-radius': '5px',
-                      'background': '#c1c9c4'})
+                      'background': '#a1cca5'}, className='container-trajectory')
             )
 
         return div
