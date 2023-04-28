@@ -1,16 +1,16 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-from dash import Dash, html
+from dash import html
 
 
 class ODE:
     def __init__(self):
         self.f = None
+        self.nf = None
         self.n = 0
-        self.fig = make_subplots(1, 3, subplot_titles=('ODE solution space', 'Error plot', 'Region of Convergence'))
+        self.fig = make_subplots(1, 3, subplot_titles=('ODE solution space', 'Order of error', 'Region of stability'))
         self.trajectories = []
 
     def frwd_euler(self, t, h, xi, f):
@@ -89,10 +89,6 @@ class ODE:
                         html.Label('Initial Condition: ' + str(self.trajectories[i].x0))
                     ], style={'flex': '3 1 25%', 'padding': '5px'}),
 
-                    # html.Div(children=[
-                    #     html.Button('Select', id={"index": i, "type": "selected"}, n_clicks=0),
-                    # ], style={'flex': '4 1 10%', 'padding': '5px'}),
-
                     html.Div(children=[
                         html.Button('Delete', id={"index": i, "type": "delete"}, n_clicks=0),
                     ], style={'flex': '5 1 20%', 'padding': '5px'})
@@ -112,7 +108,7 @@ class ODE:
         return div
 
     def update_traces(self):
-        self.fig = make_subplots(1, 3, subplot_titles=('ODE solution space', 'Error convergence plot', 'Region of Convergence'))
+        self.fig = make_subplots(1, 3, subplot_titles=('ODE solution space', 'Order of error', 'Region of stability'))
         self.solution_space()
         for i, trajectory in enumerate(self.trajectories):
             self.add_traces(trajectory, i)
@@ -122,8 +118,7 @@ class ODE:
                                       x=trajectory.t, y=trajectory.x,
                                       mode='lines',
                                       line=dict(color='rgb'+str(trajectory.color)),
-                                      hovertemplate='%{y:.4f}'
-                                      ),
+                                      hovertemplate='%{y:.4f}'),
                            row=1, col=1)
 
     def solution_space(self):
@@ -150,6 +145,12 @@ class ODE:
         methods = []
         for trajectory in self.trajectories:
             methods.append(trajectory.method)
+            if self.nf == 'B':
+                self.fig.add_trace(go.Scatter(x=tuple([trajectory.h*-1]), y=tuple([0]), mode='markers', name='z=' + str(trajectory.h*-0.1)),
+                                   row=1, col=3)
+            elif self.nf == 'C':
+                self.fig.add_trace(go.Scatter(x=tuple([trajectory.h*-5]), y=tuple([0]), mode='markers', name='z=' + str(trajectory.h*-0.1)),
+                                   row=1, col=3)
         methods = np.unique(methods)
         for method in methods:
             if method == "Forward Euler":

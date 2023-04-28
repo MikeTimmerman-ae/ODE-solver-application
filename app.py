@@ -3,10 +3,10 @@
 
 """
 Created: 2023-03-20
-Modified: 2023-03-20
-@author: mtimmerm
+Modified: 2023-04-27
+@author: m. timmerman
 
-Example ODE tool.
+WebApp: ODE tool
 """
 
 ## Import libraries
@@ -17,6 +17,7 @@ import numpy as np
 app = Dash(__name__)
 
 app.layout = html.Div(children=[
+    # Header container
     html.Div(children=[
         html.H1(children='ODE solver'),
         html.P('This is an ordinary differential equation WebApp showing some basic characteristics of'
@@ -28,29 +29,28 @@ app.layout = html.Div(children=[
                ' At the bottom of the page, the left graph shows the solution space with some'
                ' standard trajectories given as reference as well as the references added by the user.'
                ' The middle graph gives the order of the error vs. the time step while the most right'
-               ' plot displays the region of convergence for the different solving methods.'
-               ' Note: for the plots to update, change the value of the slider.'),
+               ' plot displays the region of convergence for the different solving methods.'),
     ], className='header-container'),
 
     html.Div(children=[
 
         html.Div(children=[
-
+            # Choose ODE container
             html.Div(children=[
                 html.H2('Choose ODE'),
                 dcc.Markdown('''
                 A. $$y'(x, y) = (y + 1) cos(y x)$$\n
-                B. $$y'(x, y) = -0.1y$$\n
-                C. $$y'(x, y) = -2y$$\n
+                B. $$y'(x, y) = -y$$\n
+                C. $$y'(x, y) = -5y$$\n
                 D. $$y'(x, y) = cos(x)$$\n
-                E. $$y'(x, y) = -2y$$
+                E. $$y'(x, y) = \\frac{3ysin(x)-2xy}{x^2+1}$$
                 ''', mathjax=True, style={'color': '#d3d3d3',
                                           'font-family': 'Arial, Helvetica, sans-serif',
                                           'margin': '5px',
                                           'font-size': '13px'}),
                 dcc.Dropdown(['A', 'B', 'C', 'D', 'E'], '', id='choose-ode'),
             ], className='secondary-container'),
-
+            # Add new trajectory container
             html.Div(children=[
                 html.H2('Add new trajectory'),
                 html.Label('Timestep:'),
@@ -108,16 +108,17 @@ app.layout = html.Div(children=[
 
     ], style={'display': 'flex', 'flex-direction': 'row'}),
 
+    # Bottom container displaying 3 plots: ODE solution space, error plot, stability region
     html.Div(children=[
         dcc.Graph(
             mathjax=True,
-            id='example-graph',
+            id='graph',
         )
         ], className='graph-container'),
 ])
 
 
-# # Switch ode
+# Switch ODE
 @app.callback(Output("trajectory-container", "children", allow_duplicate=True),
               Input('choose-ode', 'value'),
               prevent_initial_call='initial_duplicate')
@@ -126,15 +127,23 @@ def choose_ode(ode_choice):
         if ode_choice == 'A':
             f = lambda t, x: (x + 1) * np.cos(x * t)
             ode.f = f
+            ode.nf = 'A'
         elif ode_choice == 'B':
-            f = lambda t, x: -0.1 * x
+            f = lambda t, x: -1 * x
             ode.f = f
+            ode.nf = 'B'
         elif ode_choice == 'C':
-            f = lambda t, x: -2 * x
+            f = lambda t, x: -5 * x
             ode.f = f
+            ode.nf = 'C'
         elif ode_choice == 'D':
             f = lambda t, x: np.cos(t)
             ode.f = f
+            ode.nf = 'D'
+        elif ode_choice == 'E':
+            f = lambda t, x: (3*x*np.sin(t)-2*t*x)/(t**2+1)
+            ode.f = f
+            ode.nf = 'E'
         ode.trajectories = []
         ode.n = 0
     div = ode.create_div()
@@ -162,7 +171,7 @@ def add_trajectory(btn, method):
         return None
 
 
-# Add trajectory to db
+# Add trajectory to database
 @app.callback(Output('trajectory-container', 'children', allow_duplicate=True),
               Input('add-trajectory', 'n_clicks'),
               State('timestep', 'value'),
@@ -181,11 +190,10 @@ def add_trajectory(btn, h, x0, method, tf):
     return div
 
 
-# Delete trajectory from db
+# Delete trajectory from database
 @app.callback(Output("trajectory-container", "children", allow_duplicate=True),
               Input({"index": ALL, "type": "delete"}, 'n_clicks'),
-              prevent_initial_call='initial_duplicate'
-              )
+              prevent_initial_call='initial_duplicate')
 def delete_trajectory(*args):
     trigger = callback_context.triggered[0]
     if trigger['value'] == 1:
@@ -196,17 +204,15 @@ def delete_trajectory(*args):
     return div
 
 
-# Update trajectory traces in figure
-@app.callback(Output('example-graph', 'figure', allow_duplicate=True),
+# Update trajectory traces in plots
+@app.callback(Output('graph', 'figure', allow_duplicate=True),
               Input('sliderinput', 'value'),
               Input('choose-ode', 'value'),
               Input({"index": ALL, "type": "delete"}, 'n_clicks'),
               Input('add-trajectory', 'n_clicks'),
               prevent_initial_call='initial_duplicate')
 def update_figure(*args):
-    trigger = callback_context.triggered[0]
-    if (ctx.triggered_id == "add-trajectory" or ctx.triggered_id == "sliderinput" or trigger['value'] == 1 or \
-            ctx.triggered_id == 'choose-ode') and args[1] != "":
+    if args[1] != "":
         ode.update_trajectories(args[0])        # args[0] = final time
         ode.update_traces()
         ode.error_space()
